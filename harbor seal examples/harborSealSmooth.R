@@ -27,7 +27,8 @@ initial = list(
 
 ### Show all the parameters to provide start values and define a prior...
 df=50
-theta.start = c(rep(log(2000),3),log(5400),rep(0,df),rep(0,df+1))
+# 2m/s =2*60*60 m/h 
+theta.start = c(rep(log(2000),3),log(2*60*60),rep(0,df),rep(0,df+1))
 fixPar = c(log(250), log(500), log(1500), rep(NA,2*df+8-3), 0)
 displayPar( mov.model=~bs(harborSeal$Time, df=df), err.model=list(x=~Argos_loc_class-1),data=harborSeal, 
                 activity=~I(1-DryTime),fixPar=fixPar, theta=theta.start
@@ -43,8 +44,8 @@ fit1 <- crwMLE(
   constr=constr,
   theta = theta.start,
   prior=prior,
-  control=list(maxit=2000, trace=1, REPORT=1)#,
-  #initialSANN=list(maxit=10000, temp=100, tmax=100, trace=1, REPORT=1)
+  # initialSANN=list(maxit=2000, temp=100, tmax=5, trace=1, REPORT=1),
+  control=list(maxit=2000, trace=1, REPORT=1)
 )
 
 print(fit1)
