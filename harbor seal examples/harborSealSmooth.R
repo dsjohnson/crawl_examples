@@ -67,11 +67,12 @@ print(p3)
 displayPar( mov.model=~bs(harborSeal$Time, df=df), err.model=list(x=~Argos_loc_class-1),data=harborSeal, 
                 activity=~I(1-DryTime),fixPar=fit1$par)
 
+# time series of velocity correlation
 vel.cor = exp(-exp(fit1$mov.mf%*%fit1$par[(df+8):(2*df+8)]))
-vel.sd = exp(fit1$mov.mf%*%fit1$par[7:(df+7)])
+#time series of velosity variance parameter
+vel.sigma = exp(fit1$mov.mf%*%fit1$par[7:(df+7)])
+# plot of correlation
 plot(fit1$data$Time, vel.cor, type='l')
-plot(vel.cor, vel.sd)
+# plot of corrleation v. sigma
+plot(vel.cor, vel.sigma)
 
-# 
-# ##See simulated annealing start values
-# fit2$init$par
