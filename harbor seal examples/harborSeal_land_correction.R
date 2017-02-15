@@ -2,8 +2,7 @@
 library(dplyr)
 library(sp)
 library(crawl)
-library(raster)
-library(gdistance)
+# library(gdistance)
 
 data("harborSeal")
 
@@ -16,7 +15,9 @@ sp::proj4string(harborSeal) <- CRS("+init=epsg:4326")
 harborSeal <- sp::spTransform(harborSeal, CRS("+init=epsg:3338"))
 harborSeal <- harborSeal[order(harborSeal$Time),]
 
+#######################################################
 # fit crawl model
+######################################################
 
 initial = list(
   a=c(coordinates(harborSeal)[1,1],0,
@@ -44,27 +45,37 @@ predTimes <- seq(min(harborSeal$Time), max(harborSeal$Time), by = 0.5)
 
 # Created predicted path
 hs_pred <- crawl::crwPredict(fit1, predTime=predTimes)
-# coordinates(hs_pred) <- ~mu.x+mu.y
-# proj4string(hs_pred) <- CRS("+init=epsg:3338")
+coordinates(hs_pred) <- ~mu.x+mu.y
+proj4string(hs_pred) <- CRS("+init=epsg:3338")
 
-# Create simulated posterior track
-# simObj <- crwSimulator(fit1, predTimes, parIS=0)
-# samp = crwPostIS(simObj, fullPost = FALSE)
+########################################################
+# Obtain coastline using nPacMaps
+# If not installed:
+# devtools::install_github("jmlondon/nPacMaps")
+######################################################
 
-# Get land raster
-land = raster(system.file("raster/land_res.grd", package="crawl"))
+library(nPacMaps)
+library(raster)
+library(gdistance)
+# Get Alaska polygon
+ak = nPacMaps::alaska(fortify = FALSE)
+land = raster(
+  ext =
+    extend(extent(bbox(hs_pred)),100000),
+  resolution = 5000,
+  crs = CRS(proj4string(hs_pred))
+) %>% rasterize(ak,., getCover=TRUE)
+
+land = (land>=95)
+
 plot(land)
 lines(hs_pred$mu.x, hs_pred$mu.y)
 
-# Convert to water areas
-water = asFactor(1-land)
 #Create transition matrix
-trans = transition(water, "areas", directions = 16)[[1]]
-# Move path based on shortest distance around land
-new_hs_pred = fix_path(hs_pred, land, trans)
-plot(land)
-lines(new_hs_pred, col="red")
+trans = transition(1-land, prod, directions = 16)
 
-# new_samp = fix_path(samp, land, trans)
-# plot(land)
-# lines(new_samp, col="red")
+# Move path based on shortest distance around land
+new_hs_pred = fix_path(hs_pred, hs_pred$Time, land, trans)
+plot(land)
+plot(as(new_hs_pred, "SpatialLines"), col="red", add=TRUE)
+
