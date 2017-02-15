@@ -7,21 +7,26 @@ library(crawl)
 data("harborSeal")
 
 harborSeal %>% dplyr::filter(!is.na(latitude)) %>% 
-  as.data.frame() -> harborSeal
+  as.data.frame() -> harborSeal_sp
 
-sp::coordinates(harborSeal) <- ~longitude + latitude
-sp::proj4string(harborSeal) <- CRS("+init=epsg:4326")
+sp::coordinates(harborSeal_sp) <- ~longitude + latitude
+sp::proj4string(harborSeal_sp) <- CRS("+init=epsg:4326")
+harborSeal_sp <- sp::spTransform(harborSeal_sp, CRS("+init=epsg:3338")) %>% 
+  as("data.frame")
 
-harborSeal <- sp::spTransform(harborSeal, CRS("+init=epsg:3338"))
-harborSeal <- harborSeal[order(harborSeal$Time),]
+harborSeal %>%  
+  dplyr::select( -longitude, -latitude) %>% 
+  left_join(harborSeal_sp) -> harborSeal
+
+levels(harborSeal$Argos_loc_class) = c("3","2","1","0","A","B")
 
 #######################################################
 # fit crawl model
 ######################################################
 
 initial = list(
-  a=c(coordinates(harborSeal)[1,1],0,
-      coordinates(harborSeal)[1,2],0),
+  a=c(harborSeal$longitude[1],0,
+      harborSeal$latitude[1],0),
   P=diag(c(10000^2,5400^2,10000^2,5400^2))
 )
 
@@ -34,7 +39,7 @@ constr=list(
 
 fit1 <- crwMLE(
   mov.model=~1, err.model=list(x=~Argos_loc_class-1), activity=~I(1-DryTime),
-  data=harborSeal, coord=c("x","y"), Time.name="Time", 
+  data=harborSeal, coord=c("longitude","latitude"), Time.name="Time", 
   initial.state=initial, fixPar=fixPar, theta=c(rep(log(5000),3),log(3*3600), 0),
   constr=constr,
   control=list(maxit=2000, trace=1, REPORT=1)#,
