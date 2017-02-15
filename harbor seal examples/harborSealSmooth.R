@@ -74,5 +74,5 @@ vel.sigma = exp(fit1$mov.mf%*%fit1$par[7:(df+7)])
 # plot of correlation
 plot(fit1$data$Time, vel.cor, type='l')
 # plot of corrleation v. sigma
-plot(vel.cor, vel.sigma)
+plot(vel.cor, vel.sigma, type='l')
 
