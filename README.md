@@ -1,37 +1,20 @@
-## Welcome to GitHub Pages
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+`crawl` examples
+----------------
 
-You can use the [editor on GitHub](https://github.com/dsjohnson/crawl_examples/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+This repository is a collection of examples and code snippets related to the R package `crawl`. The [Correlated RAndom Walk Library](https://cran.r-project.org/package=crawl) of R functions was designed for fitting continuous-time correlated random walk (CTCRW) models with time indexed covariates. The examples in this repository were previously included as demos within the `crawl` package.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+1.  fur seal examples
+2.  harbor seal examples
+3.  shiny applications
+4.  vignettes
 
-### Markdown
+how to explore and learn
+------------------------
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+The easiest way to get started with these examples is to start a new project within RStudio and clone from this git repository. This will give you a local copy of the complete repository that you can run and explore on your machine. As updates are made to the repository over time, you can simply run a `git pull` and your local copy will be in sync with the latest version
 
-```markdown
-Syntax highlighted code block
+contribute your own examples
+----------------------------
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/dsjohnson/crawl_examples/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+We encourage you to develop and push your own examples to the repository. The more examples we have, the more `crawl` users can learn from each other. We will provide more details in the future, but for now, those familiar with typical GitHub pull request workflows (e.g. fork a copy to your account, submit pull request via the green button) should feel free to contribute.
