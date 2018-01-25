@@ -2,6 +2,7 @@ library(crawl)
 library(ggplot2)
 library(splines)
 library(sp)
+library(dplyr)
 data(harborSeal)
 head(harborSeal)
 harborSeal$Argos_loc_class = factor(harborSeal$Argos_loc_class, levels=c("3","2","1","0","A","B"))
@@ -29,16 +30,22 @@ initial = list(
 df=50
 # 2m/s =2*60*60 m/h 
 theta.start = c(rep(log(2000),3),log(2*60*60),rep(0,df),rep(0,df+1))
+
 fixPar = c(log(250), log(500), log(1500), rep(NA,2*df+8-3), 0)
+
 displayPar( mov.model=~bs(harborSeal$Time, df=df), err.model=list(x=~Argos_loc_class-1),data=harborSeal, 
                 activity=~I(1-DryTime),fixPar=fixPar, theta=theta.start
                 )
+
 constr=list(lower=c(rep(log(1500),3),rep(-Inf,2*df+5-3)), upper=rep(Inf,2*df+5))
 tune=1
+
 prior = function(par){(sum(-abs(par[5:(df+4)])) + sum(-abs(par[(df+6):(2*df+5)])))/tune}
+
 set.seed(321)
 fit1 <- crwMLE(
-  mov.model=~bs(harborSeal$Time, df=df), err.model=list(x=~Argos_loc_class-1), activity=~I(1-DryTime),
+  mov.model=~bs(harborSeal$Time, df=df), 
+  err.model=list(x=~Argos_loc_class-1), activity=~I(1-DryTime),
   data=harborSeal, coord=c("x","y"), Time.name="Time", 
   initial.state=initial, fixPar=fixPar, 
   constr=constr,
@@ -50,7 +57,10 @@ fit1 <- crwMLE(
 
 print(fit1)
 
-pred1 = crwPredict(fit1, predTime=NULL, speedEst=FALSE, flat=TRUE, getUseAvail=FALSE)
+predTimes = floor(seq(min(harborSeal$Time), max(harborSeal$Time), by=6))[-1]
+
+pred1 = crwPredict(fit1, predTime=predTimes, speedEst=FALSE, flat=TRUE, getUseAvail=FALSE) %>% 
+  filter(locType=="p")
 
 require(ggplot2)
 p1=ggplot(aes(x=mu.x, y=mu.y), data=pred1) + geom_path(col="red") + geom_point(aes(x=x, y=y), col="blue") + coord_fixed()
@@ -77,3 +87,14 @@ plot(fit1$data$Time, vel.cor, type='l')
 # plot of corrleation v. sigma
 plot(vel.cor, vel.sigma, type='l')
 
+
+### Experimental clustering for calculating behavior states
+library(cluster)
+mov_par = data.frame(ln_beta=fit1$mov.mf%*%fit1$par[(df+8):(2*df+8)], ln_sigma=fit1$mov.mf%*%fit1$par[7:(df+7)])
+d = dist(mov_par, method = "euclidean") # distance matrix
+clust = hclust(d, method="ward") 
+states = cutree(clust, 3)
+pred1$states = factor(states)
+
+###
+ggplot(data=pred1) + geom_point(aes(x=mu.x, y=mu.y, col=states), alpha=0.3)

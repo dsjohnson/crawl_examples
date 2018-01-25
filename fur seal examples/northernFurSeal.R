@@ -30,6 +30,8 @@ fit1 <- crwMLE(
   mov.model=~1, err.model=list(x=~Argos_loc_class-1), drift=TRUE,
   data=northernFurSeal, Time.name="Time", 
   initial.state=initial, fixPar=fixPar, constr=constr,# prior=ln.prior,
+  theta = c(rep(log(1500)+1,2), log(10), -3, 0,0),
+  method="L-BFGS-B",
   control=list(trace=1, REPORT=1)
 )
 fit1

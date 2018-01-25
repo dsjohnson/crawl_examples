@@ -63,15 +63,13 @@ library(nPacMaps)
 library(raster)
 library(gdistance)
 # Get Alaska polygon
-ak = nPacMaps::alaska(fortify = FALSE)
+ak = nPacMaps::alaska(fortify = FALSE, simplify = FALSE)
 land = raster(
   ext =
     extend(extent(bbox(hs_pred)),100000),
   resolution = 5000,
   crs = CRS(proj4string(hs_pred))
-) %>% rasterize(ak,., getCover=TRUE)
-
-land = (land>=95)
+) %>% rasterize(ak,., getCover=TRUE)/100
 
 plot(land)
 lines(hs_pred$mu.x, hs_pred$mu.y)
@@ -81,6 +79,7 @@ trans = transition(1-land, prod, directions = 16)
 
 # Move path based on shortest distance around land
 new_hs_pred = fix_path(hs_pred, hs_pred$Time, land, trans)
-plot(land)
-plot(as(new_hs_pred, "SpatialLines"), col="red", add=TRUE)
+
+plot(as(new_hs_pred, "SpatialLines"), col="red")
+plot(ak, col=gray(0.5), add=TRUE)
 
