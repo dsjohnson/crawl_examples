@@ -34,20 +34,18 @@ fit1 <- crwMLE(
 fit1
 ##Make hourly location predictions
 predObj <- crwPredict(fit1, predTime="6 hours", return.type = "flat") 
-print(mapview(predObj%>% crw_as_sf("LINESTRING"), cex=1))
+plt = print(mapview(predObj%>% crw_as_sf("LINESTRING"), cex=1, color='red', map.types="Esri.WorldImagery"))
+print(plt)
 
 ##Create simulation object with 100 parameter draws
 set.seed(123)
-# simObj <- crwSimulator(fit1, method="IS", parIS=100, df=50, scale=18/20)
 simObj <- crwSimulator(fit1, predTime="6 hour", method="quadrature", quad.ask=F)
 
 
 ## Sample 20 tracks from posterior predictive distribution
-iter <- 20
-plt = mapview(predObj%>% crw_as_sf("LINESTRING"), color='red')
-for(i in 1:iter){
-  samp <- crwPostIS(simObj, fullPost = TRUE) %>% crw_as_sf("LINESTRING")
-  plt = plt + mapview(samp, color = 'red', alpha=0.25)
-}
+samp_df = tibble(rep=1:20) %>% mutate(
+  samp = map(rep, ~crwPostIS(simObj, fullPost = TRUE) %>% crw_as_sf("LINESTRING"))
+) 
+plt = plt + mapview(samp_df$samp, color = 'red', alpha=0.3)
 print(plt)
       
