@@ -55,7 +55,7 @@ pup_frame %>% #slice(90:97) %>%
                                lower=c(rep(log(1500),2), rep(-Inf,3)), upper=rep(Inf,5)
                              ), method='L-BFGS-B', attempts = 5)
                            # Make some predictions at 6 hour intervals
-                           pred = crwPredict(fit, predTime = "6 hour") %>% 
+                           pred = crwPredict(fit, predTime = "1 day") %>% 
                              crw_as_tibble() %>% filter(locType=="p")
                            list(fit=fit, pred=pred)
                          }
@@ -68,12 +68,19 @@ pup_frame %>% #slice(90:97) %>%
 
 ### Make some plots
 # get shoreline 
-np = nPacMaps::npac()
+np = nPacMaps::npac() # install with-- devtools::install_github("jmlondon/nPacMaps")
 
-pred_data = pup_frame %>% select(-fit) %>% unnest(pred) %>% 
-  st_as_sf(coords=c("mu.x","mu.y")) %>% st_set_crs(3832)
-
-ggplot() + geom_sf(data=pred_data) + geom_sf(data=np)
+pred_data = pup_frame %>% select(-fit) %>% unnest(pred)
+bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
 
 
+### Plot by sex
+ggplot(data=pred_data) + geom_path(aes(x=mu.x, y=mu.y, color=sex, group=dbid)) + geom_sf(data=np, fill=1, color=1) +
+  coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
+# ggsave(file="nfs_sex.png", width = 8, height=6)
+
+### Plot by site
+ggplot(data=pred_data) + geom_path(aes(x=mu.x, y=mu.y, color=site, group=dbid)) + geom_sf(data=np, fill=1, color=1) +
+  coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
+# ggsave(file="nfs_site.png", width = 8, height=6)
 
