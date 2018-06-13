@@ -38,7 +38,7 @@ pup_frame = pup_frame %>% group_by(dbid, site, sex) %>% nest()
 ### Will be based on parallel R sessions 
 plan("multisession")
 
-pup_frame %>% #slice(90:97) %>% 
+pup_frame %>% 
   mutate(
     # Fit a ctcrw model and make some predictions
     fit_pred = future_map(data, 
@@ -52,7 +52,7 @@ pup_frame %>% #slice(90:97) %>%
                              fixPar=c(log(250), log(500), log(1500), NA, NA, NA,4, NA, NA),
                              theta=c(log(2000), log(2000), 5, 0, 0),
                              constr=list(
-                               lower=c(rep(log(1500),2), rep(-Inf,3)), upper=rep(Inf,5)
+                               lower=c(rep(log(1500),2), rep(-Inf,3)), upper=Inf
                              ), method='L-BFGS-B', attempts = 5)
                            # Make some predictions at 6 hour intervals
                            pred = crwPredict(fit, predTime = "1 day") %>% 
@@ -66,6 +66,8 @@ pup_frame %>% #slice(90:97) %>%
   ) %>% 
   select(-fit_pred) -> pup_frame
 
+
+
 ### Make some plots
 # get shoreline 
 np = nPacMaps::npac() # install with-- devtools::install_github("jmlondon/nPacMaps")
@@ -75,12 +77,12 @@ bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
 
 
 ### Plot by sex
-ggplot(data=pred_data) + geom_path(aes(x=mu.x, y=mu.y, color=sex, group=dbid)) + geom_sf(data=np, fill=1, color=1) +
+ggplot(data=pred_data) + geom_point(aes(x=mu.x, y=mu.y, color=sex, group=dbid)) + geom_sf(data=np, fill=1, color=1) +
   coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
 # ggsave(file="nfs_sex.png", width = 8, height=6)
 
 ### Plot by site
-ggplot(data=pred_data) + geom_path(aes(x=mu.x, y=mu.y, color=site, group=dbid)) + geom_sf(data=np, fill=1, color=1) +
+ggplot(data=pred_data) + geom_point(aes(x=mu.x, y=mu.y, color=site, group=dbid)) + geom_sf(data=np, fill=1, color=1) +
   coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
 # ggsave(file="nfs_site.png", width = 8, height=6)
 
