@@ -70,7 +70,7 @@ pup_frame %>%
 
 ### Make some plots
 # get shoreline 
-np = nPacMaps::npac() # install with-- devtools::install_github("jmlondon/nPacMaps")
+np = ptolemy::npac() # install with-- devtools::install_github("jmlondon/ptolemy")
 
 pred_data = pup_frame %>% select(-fit) %>% unnest(pred)
 bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
@@ -79,10 +79,10 @@ bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
 ### Plot by sex
 ggplot(data=pred_data) + geom_point(aes(x=mu.x, y=mu.y, color=sex, group=dbid), alpha=0.2) + geom_sf(data=np, fill=1, color=1) +
   coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
-ggsave(file="nfs_sex.png", width = 8, height=6)
+# ggsave(file="nfs_sex.png", width = 8, height=6)
 
 ### Plot by site
 ggplot(data=pred_data) + geom_point(aes(x=mu.x, y=mu.y, color=site, group=dbid), alpha=0.2) + geom_sf(data=np, fill=1, color=1) +
   coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
-ggsave(file="nfs_site.png", width = 8, height=6)
+# ggsave(file="nfs_site.png", width = 8, height=6)
 
