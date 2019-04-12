@@ -29,7 +29,8 @@ fit1 <- crwMLE(
   fixPar=fixPar, constr=constr,# prior=ln.prior,
   theta = c(rep(log(1500)+1,2), log(3000), 0, 0,0),
   method="L-BFGS-B",
-  control=list(trace=1, REPORT=1)
+  control=list(trace=1, REPORT=1),
+  attemps=10
 )
 fit1
 ##Make hourly location predictions
