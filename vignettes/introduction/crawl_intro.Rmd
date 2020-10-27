@@ -70,7 +70,7 @@ head(northernFurSeal)
 ```
 Define the location classes as factors
 ```{r}
-northernFurSeal$Argos_loc_class <- factor(northernFurSeal$Argos_loc_class,
+northernFurSeal$loc_class <- factor(northernFurSeal$loc_class,
                                           levels=c("3", "2", "1","0","A"))
 ```
 
@@ -79,7 +79,7 @@ First, tell R which columns represent the coordinates for the data
 ```{r, message=FALSE}
 library(sp)
 library(rgdal)
-coordinates(northernFurSeal) = ~longitude+latitude
+coordinates(northernFurSeal) = ~long+lat
 ```
 Get the projection information from the data
 ```{r}
@@ -129,7 +129,7 @@ fixPar = c(log(250), log(500), log(1500), rep(NA,3), NA)
 To make sure everything looks as it should, view the parameters that will be used in the crawl model
 ```{r,message=FALSE}
 displayPar(mov.model=~1,
-           err.model=list(x=~Argos_loc_class-1),
+           err.model=list(x=~loc_class-1),
            data=northernFurSeal,
            fixPar=fixPar)
 ```
@@ -155,13 +155,14 @@ In this example we used an intercept model. You can add more covariates to the m
 ```{r,message=FALSE}
 set.seed(123)
 fit1 <- crwMLE(mov.model=~1, 
-               err.model=list(x=~Argos_loc_class-1),
+               err.model=list(x=~loc_class-1),
                data=northernFurSeal, 
-               Time.name="Time",
+               Time.name="GMT",
                initial.state=initial,
                fixPar=fixPar, 
                constr=constr, 
                prior=ln.prior,
+               method="L-BFGS-B",
                control=list(maxit=30, trace=0,REPORT=1),
                initialSANN=list(maxit=200, trace=0, REPORT=1))
 ```
@@ -177,21 +178,19 @@ In order to standardize the data and make hourly locaiton predictions, use the `
 
 The speed estimates from this function are measures of instantaneous speed. The data must be projected and the output is in meters per whatever time unit you have specified. If the time unit is projected and POSIXct, then divide the estimate by 3600 to get a speed estimate in m/s. 
 
-First, define the min and max (floor and cieling) times in your data
-```{r,message=FALSE}
-predTime <- seq(ceiling(min(northernFurSeal$Time)), 
-                floor(max(northernFurSeal$Time)), 1)
-```
-Next, using the MLE model you fit above, predict locations using the time range specified by predTime
+Using the MLE model you fit above, predict locations using the time range specified by predTime, e.g., here we will predict every hour starting with the first observation:
 ```{r,message=FALSE}
 predObj <- crwPredict(object.crwFit=fit1, 
-                      predTime, 
-                      speedEst=TRUE, 
-                      flat=TRUE)
+                      predTime = "1 hour", 
+                      return.type="flat")
 ```
 Now, view the predicted movement path
 ```{r,message=FALSE}
 crwPredictPlot(predObj, "map")
+```
+and the path by each coordinate separately,
+```{r,message=FALSE}
+crwPredictPlot(predObj, "ll")
 ```
 
 ### Simulation 
@@ -200,7 +199,7 @@ Create a simulation object with 100 parameter draws. The simulator function is d
 ```{r,message=FALSE}
 set.seed(123)
 simObj <- crwSimulator(fit1, 
-                       predTime, 
+                       predTime="1 hour", 
                        method="IS", 
                        parIS=100, 
                        df=5, 
@@ -317,7 +316,8 @@ fit1 <- crwMLE(
   data=harborSeal, coord=c("x","y"), Time.name="Time", 
   initial.state=initial, fixPar=fixPar, theta=c(rep(log(5000),3),log(3*3600), 0),
   constr=constr,
-  control=list(maxit=2000, trace=1, REPORT=1)
+  method="L-BFGS-B",
+  control=list(maxit=2000)
 )
 ```
 View the model output:
@@ -328,7 +328,7 @@ print(fit1)
 ###Predict regularly-spaced locations.
 In this example `predTime=NULL` because there are already hourly times in the data due to the activity parameter 
 ```{r}
-pred1 = crwPredict(fit1, predTime=NULL, flat=TRUE)
+pred1 = crwPredict(fit1, return.type="flat")
 ```
 View the predicted movement path using ggplot2
 ```{r}
@@ -373,7 +373,7 @@ Some initial tidying of the data has been done prior to inclusion with the packa
 
 ```{r message=FALSE}
 data("beardedSeals")
-beardedSeals
+head(beardedSeals)
 ```
 
 The key columns to note are
@@ -539,7 +539,7 @@ stopImplicitCluster()
 predData$predTimes <- intToPOSIX(predData$TimeNum)
 ```
 
-While a projected _SpatialPointsDataFrame_ was passed to the `crwMLE()` funtion, the prediction object returned from `crwPredict()` is not a _SpatialPointsDataFrame_. The columns `mu.x` and `mu.y` represent the predicted coordinates which we can coerce into a _SpatialPointsDataFrame_ with the `coordinates()` function and then specify our projection with the `proj4string` function.
+While a projected _SpatialPointsDataFrame_ was passed to the `crwMLE()` function, the prediction object returned from `crwPredict()` is not a _SpatialPointsDataFrame_. The columns `mu.x` and `mu.y` represent the predicted coordinates which we can coerce into a _SpatialPointsDataFrame_ with the `coordinates()` function and then specify our projection with the `proj4string` function.
 
 ```{ message=FALSE}
 predData_sp <- predData
@@ -548,7 +548,7 @@ proj4string(predData_sp) <- CRS("+init=epsg:3571")
 ```
 
 ### Plot the output
-Using ggplot, we can examin the predicted movement path for each bearded seal. We will create a custom ggplot theme to provide a mapping look and feel.
+Using ggplot, we can examine the predicted movement path for each bearded seal. We will create a custom ggplot theme to provide a mapping look and feel.
 
 ```{r plot-1}
 theme_map = function(base_size=9, base_family="")
