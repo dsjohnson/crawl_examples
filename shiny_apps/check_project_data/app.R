@@ -96,7 +96,7 @@ server <- function(input,output,session) {
   output$proj <- renderText({
     if(is.null(newData())) return()
     newdata <- newData()
-    coordinates(newdata) <- ~x+y
+    sp::coordinates(newdata) <- ~x+y
     proj4string(newdata) <- CRS("+proj=longlat")
     proj4string(newdata)
     
@@ -112,7 +112,7 @@ server <- function(input,output,session) {
     if(input$projection==TRUE) stop ('')
     projdata <- newData()
     #if(is.na(projdata[,input$Lat])) stop ('')
-    coordinates(projdata) <- ~x+y
+    sp::coordinates(projdata) <- ~x+y
     proj4string(projdata) <- CRS("+proj=longlat")
     
     if(is.null(input$epsg)) {return()}

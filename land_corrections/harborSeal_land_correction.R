@@ -1,8 +1,18 @@
 
+################################################################################
+### WARNING!!! Right now this is our best way to do this, we are currently working 
+###            on another solution but this is the best we can do at the moment
+################################################################################
+
 library(dplyr)
 library(sp)
 library(crawl)
-# library(gdistance)
+library(gdistance)
+
+### The fix_path function currently in crawl doesn't work very well use the old
+### version available here:
+devtools::source_gist("ca62cbdbb773a828d4a41faa2c2746cd")
+
 
 data("harborSeal")
 
@@ -54,19 +64,20 @@ coordinates(hs_pred) <- ~mu.x+mu.y
 proj4string(hs_pred) <- CRS("+init=epsg:3338")
 
 ########################################################
-# Obtain coastline using nPacMaps
+# Obtain coastline using ptolemy
 # If not installed:
-# devtools::install_github("jmlondon/nPacMaps")
+# devtools::install_github("jmlondon/ptolemy")
 ######################################################
 
-library(nPacMaps)
+library(ptolemy)
 library(raster)
 library(gdistance)
 # Get Alaska polygon
-ak = nPacMaps::alaska(fortify = FALSE, simplify = FALSE)
-land = raster(
-  ext =
-    extend(extent(bbox(hs_pred)),100000),
+ak <- ptolemy::alaska()
+
+## This is a pretty coarse raster, just for demonstration purposes
+land <- raster(
+  ext =extend(extent(bbox(hs_pred)),100000),
   resolution = 5000,
   crs = CRS(proj4string(hs_pred))
 ) %>% rasterize(ak,., getCover=TRUE)/100
