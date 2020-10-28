@@ -423,7 +423,7 @@ library(argosfilter)
 
 split_data <- split(beardedSeals,beardedSeals$deployid)
 
-registerDoParallel(cores=2)
+registerDoParallel(cores=3)
 beardedSeals$filtered <- foreach(i = 1:length(split_data), .combine = c) %dopar% {
   argosfilter::sdafilter(
     lat=split_data[[i]]$latitude, 
@@ -476,7 +476,7 @@ model_fits <-
                            diag_data[,1], 
                            diag_data[,2], 
                            diag_data[,3]))
-    
+    set.seed(123)
     fit <- crawl::crwMLE(
       mov.model =  ~ 1,
       err.model = list(
