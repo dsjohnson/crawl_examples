@@ -34,12 +34,6 @@ levels(harborSeal$Argos_loc_class) = c("3","2","1","0","A","B")
 # fit crawl model
 ######################################################
 
-initial = list(
-  a=c(harborSeal$longitude[1],0,
-      harborSeal$latitude[1],0),
-  P=diag(c(10000^2,5400^2,10000^2,5400^2))
-)
-
 fixPar = c(log(250), log(500), log(1500), rep(NA,5), 0)
 
 constr=list(
