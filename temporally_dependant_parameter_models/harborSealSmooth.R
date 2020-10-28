@@ -1,3 +1,9 @@
+################################################################################
+### WARNING!!! This model takes a *long* time to fit... go get some coffee
+###            while you wait ;-)
+################################################################################
+
+
 library(crawl)
 library(ggplot2)
 library(splines)
@@ -6,7 +12,8 @@ library(dplyr)
 data(harborSeal)
 head(harborSeal)
 harborSeal$Argos_loc_class = factor(harborSeal$Argos_loc_class, levels=c("3","2","1","0","A","B"))
-ak = nPacMaps::alaska()
+# devtools::install_github("jmlondon/ptolemy")
+ak = ptolemy::alaska()
 
 ## Project data ##
 

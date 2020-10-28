@@ -64,7 +64,7 @@ coordinates(hs_pred) <- ~mu.x+mu.y
 proj4string(hs_pred) <- CRS("+init=epsg:3338")
 
 ########################################################
-# Obtain coastline using nPacMaps
+# Obtain coastline using ptolemy
 # If not installed:
 # devtools::install_github("jmlondon/ptolemy")
 ######################################################
