@@ -1,11 +1,12 @@
 library(tidyverse)
 library(sf)
 library(crawl)
-library(mapview)
+# library(mapview)
 library(foreach)
 library(doFuture)
+library(doRNG)
 
-registerDoFuture()
+registerDoRNG(1234)
 
 
 ### Obtain fur seal data  
@@ -40,8 +41,7 @@ pup_frame <- pup_frame %>% group_by(dbid, site, sex) %>% nest()
 ### Fit crawl model in parallel over animals
 ### Will be based on parallel R sessions 
 plan("multisession", workers=6)
-
-pup_frame$fit_pred <- foreach(i=1:nrow(pup_frame)) %dopar% {
+pup_frame$fit_pred <- foreach(i=1:nrow(pup_frame)) %dorng% {
       # fit ctcrw model
       set.seed(123)
       .x <- pup_frame$data[[i]]
@@ -56,15 +56,14 @@ pup_frame$fit_pred <- foreach(i=1:nrow(pup_frame)) %dopar% {
           lower=c(rep(log(1500),2), rep(-Inf,2)), upper=Inf
         ), method='L-BFGS-B', attempts = 5)
       # Make some predictions at 6 hour intervals
-      pred = crwPredict(fit, predTime = "1 day") %>% 
-        crw_as_tibble() %>% filter(locType=="p")
+      pred <- crwPredict(fit, predTime = "1 day") %>% 
+        crw_as_sf(., "POINT") #%>% filter(locType=="p")
       return(list(fit=fit, pred=pred))
 }
-
 plan("sequential")
 
-pup_frame <- pup_frame %>% filter(!is.na(fit_pred)) %>% mutate(
 # Just bookeeping to split fit and pred apart
+pup_frame <- pup_frame %>% filter(!is.na(fit_pred)) %>% mutate(
     fit = map(fit_pred, ~{.x$fit}),
     pred = map(fit_pred, ~{.x$pred})
   ) %>% 
@@ -74,19 +73,20 @@ pup_frame <- pup_frame %>% filter(!is.na(fit_pred)) %>% mutate(
 
 ### Make some plots
 # get shoreline 
-np <- ptolemy::npac() # install with-- devtools::install_github("jmlondon/ptolemy")
-
-pred_data <- pup_frame %>% filter(!is.na(pred)) %>% select(-fit) %>% unnest(cols=pred)
-bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
+# np <- ptolemy::npac(resolution='h') # install with-- remotes::install_github("jmlondon/ptolemy")
+# 
+pred_data <- pup_frame %>% filter(!is.na(pred)) %>% 
+  select(-data, -fit) %>% unnest(cols=pred) %>% st_as_sf()
+# bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
 
 
 ### Plot by sex
-ggplot(data=pred_data) + geom_point(aes(x=mu.x, y=mu.y, color=sex, group=dbid), alpha=0.2) + geom_sf(data=np, fill=1, color=1) +
-  coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
+pred_data %>% ggplot(aes(color=sex)) + geom_sf(alpha=0.1) + 
+  xlab("Longitude") + ylab("Latitude")
 # ggsave(file="nfs_sex.png", width = 8, height=6)
 
 ### Plot by site
-ggplot(data=pred_data) + geom_point(aes(x=mu.x, y=mu.y, color=site, group=dbid), alpha=0.2) + geom_sf(data=np, fill=1, color=1) +
-  coord_sf(xlim =bb[1:2], ylim=bb[3:4]) + xlab("Longitude") + ylab("Latitude")
+pred_data %>% ggplot(aes(color=site)) + geom_sf(alpha=0.1) + 
+  xlab("Longitude") + ylab("Latitude")
 # ggsave(file="nfs_site.png", width = 8, height=6)
 
