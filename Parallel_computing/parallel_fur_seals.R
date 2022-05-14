@@ -1,7 +1,7 @@
 library(tidyverse)
 library(sf)
 library(crawl)
-# library(mapview)
+library(mapview); mapviewOptions(fgb = FALSE)
 library(foreach)
 library(doFuture)
 library(doRNG)
@@ -75,8 +75,8 @@ pup_frame <- pup_frame %>% filter(!is.na(fit_pred)) %>% mutate(
 # get shoreline 
 # np <- ptolemy::npac(resolution='h') # install with-- remotes::install_github("jmlondon/ptolemy")
 # 
-pred_data <- pup_frame %>% filter(!is.na(pred)) %>% 
-  select(-data, -fit) %>% unnest(cols=pred) %>% st_as_sf()
+pred_data <- pup_frame %>% select(-data, -fit) %>% filter(!is.na(pred)) %>% 
+   unnest(cols=pred) %>% st_as_sf()
 # bb = c(range(pred_data$mu.x), range(pred_data$mu.y)) + c(-1, -1, 1, 1)*100000
 
 
@@ -86,6 +86,7 @@ pred_data %>% ggplot(aes(color=sex)) + geom_sf(alpha=0.1) +
 # ggsave(file="nfs_sex.png", width = 8, height=6)
 
 ### Plot by site
+
 pred_data %>% ggplot(aes(color=site)) + geom_sf(alpha=0.1) + 
   xlab("Longitude") + ylab("Latitude")
 # ggsave(file="nfs_site.png", width = 8, height=6)
